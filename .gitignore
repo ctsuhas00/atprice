@@ -1,0 +1,7 @@
+node_modules/
+.env
+.env.*
+!.env.example
+database/*.sqlite3
+*.log
+.DS_Store

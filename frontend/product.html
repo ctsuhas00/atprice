@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product — AtPrice</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔩</text></svg>">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+
+<div class="topbar">⚡ DEMO DATA — Prices shown are sample data only. Not real market prices.</div>
+
+<!-- Header -->
+<header class="header">
+  <a href="/" class="logo">AtPrice</a>
+  <button class="header-loc" onclick="openLocModal()">📍 <span class="loc-display loc-text">Set location</span></button>
+  <div class="header-search">
+    <input id="main-search" type="text" placeholder="Search products…" autocomplete="off"
+           onkeydown="if(event.key==='Enter'){window.location='/?q='+encodeURIComponent(this.value)}">
+    <button onclick="goSearch()">🔍</button>
+  </div>
+  <div class="header-actions">
+    <span class="auth-show-logged-out"><button class="header-btn" onclick="openLoginModal()">Login</button></span>
+    <span class="auth-show-logged-in" style="display:none">
+      <button class="header-btn" onclick="openDashboardPage()">📊 <span class="auth-user-name"></span></button>
+    </span>
+    <button class="header-btn primary auth-show-logged-out" onclick="window.location='/'">List Your Shop</button>
+  </div>
+  <div class="hamburger" onclick="openNavDrawer()">
+    <span></span><span></span><span></span>
+  </div>
+</header>
+
+<nav class="nav">
+  <a href="/">Home</a>
+  <span id="nav-category">Building Materials</span>
+</nav>
+
+<!-- Mobile nav drawer -->
+<div id="nav-overlay" class="nav-drawer-overlay" onclick="closeNavDrawer()"></div>
+<div id="nav-drawer" class="nav-drawer">
+  <div class="nav-drawer-header">
+    <span class="nav-drawer-logo">🔩 AtPrice</span>
+    <button class="nav-drawer-close" onclick="closeNavDrawer()">✕</button>
+  </div>
+  <div class="nav-drawer-items">
+    <a class="nav-drawer-item" href="/"><span class="icon">🏠</span> Home</a>
+    <a class="nav-drawer-item" onclick="openLocModal();closeNavDrawer()"><span class="icon">📍</span> <span class="loc-display">Set Location</span></a>
+  </div>
+</div>
+
+<!-- Main content -->
+<main>
+  <div id="loading-state" class="section">
+    <div class="loading"><div class="loading-spinner"></div><p>Loading product…</p></div>
+  </div>
+  <div id="error-state" class="section" style="display:none">
+    <div class="error-state">
+      <h3>Product not found</h3>
+      <p>This product may have been removed or the link is invalid.</p>
+      <a href="/" class="btn btn-primary" style="margin-top:16px">← Go Home</a>
+    </div>
+  </div>
+  <div id="product-page" style="display:none">
+
+    <!-- Breadcrumb -->
+    <div class="product-detail">
+      <div class="breadcrumb" id="breadcrumb">
+        <a href="/">Home</a><span class="sep">›</span>
+        <span id="bc-category">Category</span><span class="sep">›</span>
+        <span id="bc-product">Product</span>
+      </div>
+    </div>
+
+    <!-- Product info -->
+    <div class="product-detail">
+      <div class="product-detail-grid">
+        <div>
+          <img id="product-img" class="product-main-img" src="" alt="" onerror="this.style.display='none';document.getElementById('product-img-placeholder').style.display='flex'">
+          <div id="product-img-placeholder" class="product-img-placeholder" style="display:none;border-radius:12px;background:#f1f5f9;">📦</div>
+        </div>
+        <div class="product-detail-info">
+          <div class="demo-badge">DEMO DATA</div>
+          <div id="pd-brand" class="product-detail-brand"></div>
+          <h1 id="pd-name"></h1>
+          <div id="pd-price" class="product-detail-price"></div>
+          <div class="product-detail-price-label" id="pd-price-label"></div>
+          <div id="pd-seller-chip" class="seller-count-chip" style="margin-bottom:16px"></div>
+          <div id="pd-specs" class="product-specs"></div>
+          <div id="pd-desc" style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:16px"></div>
+          <div id="pd-warranty" style="font-size:13px;color:var(--muted)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compare section -->
+    <div class="compare-section">
+      <h2>Compare Seller Prices</h2>
+      <div class="demo-notice">⚠️ All prices are sample/demo data. Actual market prices may differ.</div>
+      <div class="compare-meta" id="compare-meta"></div>
+
+      <!-- Desktop sort bar -->
+      <div class="sort-bar">
+        <span class="sort-label">Sort by:</span>
+        <button class="sort-btn active" data-sort="price_asc" onclick="setSort('price_asc')">💰 Lowest Price</button>
+        <button class="sort-btn" data-sort="nearest" onclick="setSort('nearest')">📍 Nearest</button>
+        <button class="sort-btn" data-sort="rated" onclick="setSort('rated')">⭐ Highest Rated</button>
+        <button class="sort-btn" data-sort="best_value" onclick="setSort('best_value')">🏆 Best Value</button>
+        <button class="sort-btn" data-sort="updated" onclick="setSort('updated')">🕒 Recently Updated</button>
+        <button class="sort-btn" data-sort="price_desc" onclick="setSort('price_desc')">💸 Highest Price</button>
+      </div>
+
+      <!-- Desktop table -->
+      <div id="sellers-table-wrap" style="overflow-x:auto">
+        <table class="seller-table" id="sellers-table">
+          <thead><tr>
+            <th>Shop</th><th>Location</th><th>Price</th><th>Availability</th>
+            <th>Delivery</th><th>Rating</th><th>Updated</th><th style="min-width:200px">Contact</th>
+          </tr></thead>
+          <tbody id="sellers-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Mobile cards -->
+      <div id="sellers-cards" class="seller-cards"></div>
+
+      <div id="compare-loading" class="loading">
+        <div class="loading-spinner"></div><p>Loading seller prices…</p>
+      </div>
+      <div id="compare-empty" class="empty-state" style="display:none">
+        <div class="empty-icon">🏪</div>
+        <h3>No sellers found</h3>
+        <p>No sellers are currently listing this product. Check back soon or explore similar products.</p>
+        <a href="/" class="btn btn-outline" style="margin-top:12px">← Browse Products</a>
+      </div>
+    </div>
+
+  </div><!-- /product-page -->
+</main>
+
+<!-- Mobile bottom bar -->
+<div class="bottom-bar" id="bottom-bar" style="display:none">
+  <div class="bottom-bar-inner">
+    <button class="bottom-bar-btn" onclick="openSortSheet()">↕ Sort</button>
+    <button class="bottom-bar-btn" style="background:var(--navy);color:white;border-color:var(--navy)" onclick="scrollToCompare()">🏪 See Sellers</button>
+  </div>
+</div>
+
+<!-- Sort sheet (mobile) -->
+<div id="sort-overlay" class="sort-sheet-overlay" onclick="closeSortSheet()"></div>
+<div id="sort-sheet" class="sort-sheet">
+  <h3>Sort sellers by</h3>
+  <div id="sort-options"></div>
+</div>
+
+<!-- Location Modal -->
+<div id="loc-modal" class="modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeLocModal()">✕</button>
+    <h2>📍 Set Your Location</h2>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:20px">We'll sort sellers by distance from your location.</p>
+    <button class="btn btn-outline btn-full" onclick="detectLocation()" style="margin-bottom:12px">📱 Use My GPS Location</button>
+    <div class="divider"></div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Or pick your city:</p>
+    <div id="loc-cities" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:320px;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<!-- Login Modal -->
+<div id="login-modal" class="modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeLoginModal()">✕</button>
+    <h2>🔑 Login</h2>
+    <div class="form-group">
+      <label class="form-label">Phone Number</label>
+      <input class="form-input" id="login-phone" type="tel" placeholder="9900011101" maxlength="10">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" id="login-pass" type="password" placeholder="demo1234">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Login</button>
+  </div>
+</div>
+
+<!-- Enquiry Modal -->
+<div id="enquiry-modal" class="modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeEnquiryModal()">✕</button>
+    <h2>📩 Send Enquiry</h2>
+    <div id="enquiry-product-info" style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:20px;font-size:13px;"></div>
+    <div class="form-group">
+      <label class="form-label">Your Name</label>
+      <input class="form-input" id="enq-name" type="text" placeholder="Your name">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Phone Number *</label>
+      <input class="form-input" id="enq-phone" type="tel" placeholder="10-digit mobile" maxlength="10">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Message</label>
+      <textarea class="form-input" id="enq-msg" rows="3" placeholder="Ask about availability, quantity, delivery…"></textarea>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="doEnquiry()">Send Enquiry</button>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/api.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const PRODUCT_ID = params.get('id');
+let currentSort = 'price_asc';
+let productData = null;
+let allLocations = [];
+let enquiryCtx = {};
+
+const SORTS = [
+  { key: 'price_asc', label: '💰 Lowest Price' },
+  { key: 'nearest', label: '📍 Nearest to Me' },
+  { key: 'rated', label: '⭐ Highest Rated' },
+  { key: 'best_value', label: '🏆 Best Value' },
+  { key: 'updated', label: '🕒 Recently Updated' },
+  { key: 'price_desc', label: '💸 Highest Price' },
+];
+
+async function init() {
+  if (!PRODUCT_ID) { showError(); return; }
+  document.getElementById('loading-state').style.display = '';
+
+  // Load locations
+  API.locations().then(d => {
+    allLocations = d.locations || [];
+    renderLocModal(allLocations);
+  });
+
+  // Load product
+  const pd = await API.product(PRODUCT_ID);
+  if (pd.error || !pd.product) { showError(); return; }
+  productData = pd;
+  renderProduct(pd);
+  document.getElementById('loading-state').style.display = 'none';
+  document.getElementById('product-page').style.display = '';
+  document.title = pd.product.name + ' — AtPrice';
+  document.getElementById('bottom-bar').style.display = 'flex';
+
+  // Load compare
+  loadCompare();
+
+  // Build sort sheet
+  buildSortSheet();
+}
+
+function showError() {
+  document.getElementById('loading-state').style.display = 'none';
+  document.getElementById('error-state').style.display = '';
+}
+
+function renderProduct(pd) {
+  const p = pd.product;
+  const img = pd.images?.[0]?.url || '';
+  if (img) {
+    document.getElementById('product-img').src = img;
+    document.getElementById('product-img').alt = p.name;
+  } else {
+    document.getElementById('product-img').style.display = 'none';
+    document.getElementById('product-img-placeholder').style.display = 'flex';
+  }
+
+  document.getElementById('pd-brand').textContent = [p.brand, p.manufacturer].filter(Boolean).join(' · ');
+  document.getElementById('pd-name').textContent = p.name;
+  document.getElementById('pd-desc').textContent = p.description || '';
+  if (p.warranty) document.getElementById('pd-warranty').textContent = '🛡️ Warranty: ' + p.warranty;
+
+  // Breadcrumb
+  document.getElementById('bc-category').textContent = p.category_name || 'Products';
+  document.getElementById('bc-category').onclick = () => window.location = '/?cat=' + encodeURIComponent(p.category_name || '');
+  document.getElementById('bc-product').textContent = p.name;
+  document.getElementById('nav-category').textContent = p.category_name || 'Products';
+
+  // Specs
+  const specs = typeof p.specifications === 'object' ? p.specifications : JSON.parse(p.specifications || '{}');
+  const specKeys = Object.keys(specs);
+  if (specKeys.length) {
+    document.getElementById('pd-specs').innerHTML = `<h3>Specifications</h3>` +
+      specKeys.map(k => `<div class="spec-row"><span class="spec-key">${escHtml(k.replace(/_/g,' '))}</span><span class="spec-val">${escHtml(specs[k])}</span></div>`).join('');
+  } else {
+    document.getElementById('pd-specs').style.display = 'none';
+  }
+}
+
+async function loadCompare() {
+  document.getElementById('compare-loading').style.display = '';
+  document.getElementById('sellers-tbody').innerHTML = '';
+  document.getElementById('sellers-cards').innerHTML = '';
+
+  const loc = ATPRICE.location;
+  const compareParams = { sort: currentSort };
+  if (loc) { compareParams.lat = loc.lat; compareParams.lng = loc.lng; }
+
+  const d = await API.compare(PRODUCT_ID, compareParams);
+  document.getElementById('compare-loading').style.display = 'none';
+
+  if (!d.listings?.length) {
+    document.getElementById('compare-empty').style.display = '';
+    return;
+  }
+  document.getElementById('compare-empty').style.display = 'none';
+
+  const ls = d.listings;
+  const minPrice = Math.min(...ls.map(l => l.price));
+  const pName = productData?.product?.name || 'product';
+
+  // Update price in header
+  document.getElementById('pd-price').textContent = fmtPrice(minPrice);
+  document.getElementById('pd-price-label').textContent = 'Lowest price across ' + ls.length + ' seller' + (ls.length !== 1 ? 's' : '');
+  document.getElementById('pd-seller-chip').innerHTML = `🏪 ${ls.length} seller${ls.length !== 1 ? 's' : ''} have this product`;
+
+  // Compare meta
+  const maxPrice = Math.max(...ls.map(l => l.price));
+  document.getElementById('compare-meta').innerHTML =
+    ls.length > 1 ? `Price range: <strong>${fmtPrice(minPrice)}</strong> – <strong>${fmtPrice(maxPrice)}</strong> · Save up to <strong>${fmtPrice(maxPrice - minPrice)}</strong> by comparing` : `1 seller listing this product`;
+
+  // Desktop table
+  document.getElementById('sellers-tbody').innerHTML = ls.map((l, i) => {
+    const isBest = l.price === minPrice;
+    const wa = waLink(l.whatsapp || l.phone, pName, l.price, l.shop_name);
+    return `<tr${isBest ? ' style="background:#fffbeb"' : ''}>
+      <td>
+        <div style="font-weight:600">${escHtml(l.shop_name)}</div>
+        ${l.is_verified ? '<span class="badge-verified" style="font-size:10px">✓ Verified</span>' : ''}
+        ${isBest ? '<span class="tag tag-green" style="margin-left:4px;font-size:10px">Best Price</span>' : ''}
+      </td>
+      <td style="font-size:13px;color:var(--muted)">
+        ${escHtml(l.locality || l.city || '')}${l.city ? ', ' + escHtml(l.city) : ''}
+        ${l.distance_km != null ? `<br><span style="font-size:12px">${fmtDist(l.distance_km)} away</span>` : ''}
+      </td>
+      <td><strong style="font-size:18px">${fmtPrice(l.price)}</strong>
+        ${l.mrp && l.mrp > l.price ? `<br><span style="font-size:12px;color:var(--muted);text-decoration:line-through">MRP ${fmtPrice(l.mrp)}</span>` : ''}
+      </td>
+      <td>${availChip(l.availability)}</td>
+      <td style="font-size:13px">${l.delivery_available ? '🚚 Yes' : '—'}</td>
+      <td>${l.rating ? `<span class="stars">${'★'.repeat(Math.round(l.rating))}${'☆'.repeat(5-Math.round(l.rating))}</span> <span style="font-size:12px;color:var(--muted)">${Number(l.rating).toFixed(1)}</span>` : '<span style="color:var(--muted);font-size:13px">—</span>'}</td>
+      <td><span class="updated-time">${escHtml(l.updated_label || '')}</span></td>
+      <td>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a href="tel:${escHtml(l.phone||l.mobile||'')}" class="btn btn-primary btn-sm">📞 Call</a>
+          <a href="${escHtml(wa)}" target="_blank" class="btn btn-green btn-sm">💬 WhatsApp</a>
+          <button class="btn btn-outline btn-sm" onclick="openEnquiryModal('${escHtml(l.seller_id)}','${escHtml(l.shop_name)}','${escHtml(PRODUCT_ID)}','${escHtml(pName)}',${l.price},'${escHtml(l.id)}')">📩</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Mobile cards
+  document.getElementById('sellers-cards').innerHTML = ls.map((l, i) => {
+    const isBest = l.price === minPrice;
+    const wa = waLink(l.whatsapp || l.phone, pName, l.price, l.shop_name);
+    return `<div class="seller-card${isBest ? ' style="border-color:var(--gold)"' : ''}">
+      <div class="seller-card-header">
+        <div class="seller-name-block">
+          <div class="shop-name">${escHtml(l.shop_name)}</div>
+          ${l.is_verified ? '<span class="verified-badge">✓ Verified</span>' : ''}
+          ${isBest ? '<span class="tag tag-green" style="margin-top:4px;display:inline-block">Best Price</span>' : ''}
+        </div>
+        <div class="seller-price">${fmtPrice(l.price)}</div>
+      </div>
+      <div class="seller-detail-row">
+        ${availChip(l.availability)}
+        ${l.distance_km != null ? `<span class="seller-detail-item">📍 ${fmtDist(l.distance_km)}</span>` : ''}
+        ${l.rating ? `<span class="seller-detail-item">${'★'.repeat(Math.round(l.rating))} ${Number(l.rating).toFixed(1)}</span>` : ''}
+        ${l.delivery_available ? '<span class="seller-detail-item">🚚 Delivery</span>' : ''}
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+        ${escHtml(l.locality || '')}${l.city ? (l.locality ? ', ' : '') + escHtml(l.city) : ''} · Updated ${escHtml(l.updated_label || '')}
+      </div>
+      <div class="seller-actions">
+        <a href="tel:${escHtml(l.phone||l.mobile||'')}" class="btn btn-primary btn-sm" style="flex:1">📞 Call</a>
+        <a href="${escHtml(wa)}" target="_blank" class="btn btn-green btn-sm" style="flex:1">💬 WhatsApp</a>
+        <button class="btn btn-outline btn-sm" onclick="openEnquiryModal('${escHtml(l.seller_id)}','${escHtml(l.shop_name)}','${escHtml(PRODUCT_ID)}','${escHtml(pName)}',${l.price},'${escHtml(l.id)}')">📩</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Sort ──────────────────────────────────────────────────────────────────
+function setSort(s) {
+  currentSort = s;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === s));
+  buildSortSheet();
+  loadCompare();
+}
+
+function buildSortSheet() {
+  const el = document.getElementById('sort-options');
+  el.innerHTML = SORTS.map(s => `
+    <div class="sort-option${currentSort === s.key ? ' selected' : ''}" onclick="setSort('${s.key}');closeSortSheet()">
+      ${s.label}
+      ${currentSort === s.key ? '<span class="check">✓</span>' : ''}
+    </div>`).join('');
+}
+
+function openSortSheet() {
+  document.getElementById('sort-overlay').classList.add('open');
+  document.getElementById('sort-sheet').classList.add('open');
+}
+function closeSortSheet() {
+  document.getElementById('sort-overlay').classList.remove('open');
+  document.getElementById('sort-sheet').classList.remove('open');
+}
+function scrollToCompare() {
+  document.querySelector('.compare-section')?.scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Location ──────────────────────────────────────────────────────────────
+function renderLocModal(locations) {
+  const container = document.getElementById('loc-cities');
+  container.innerHTML = locations.map(l => `
+    <button class="btn btn-outline btn-sm" onclick="selectCity('${escHtml(l.city)}',${l.lat},${l.lng})">${l.city}</button>`).join('');
+}
+function selectCity(city, lat, lng) {
+  saveLocation(city, lat, lng);
+  closeLocModal();
+  showToast('Location set to ' + city);
+  loadCompare(); // re-sort with distance
+}
+function detectLocation() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude: lat, longitude: lng } = pos.coords;
+    let nearest = allLocations[0], minD = Infinity;
+    for (const l of allLocations) {
+      const d = Math.hypot(l.lat - lat, l.lng - lng);
+      if (d < minD) { minD = d; nearest = l; }
+    }
+    selectCity(nearest.city, lat, lng);
+  }, () => showToast('Could not get location. Please select manually.', 'error'));
+}
+
+// ── Search ────────────────────────────────────────────────────────────────
+function goSearch() {
+  const q = document.getElementById('main-search').value.trim();
+  window.location = '/' + (q ? '?q=' + encodeURIComponent(q) : '');
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const phone = document.getElementById('login-phone').value.trim();
+  const password = document.getElementById('login-pass').value;
+  if (!phone || !password) { showToast('Enter phone and password.', 'error'); return; }
+  const d = await API.login({ phone, password });
+  if (d.error) { showToast(d.error, 'error'); return; }
+  saveAuth(d.token, d.user, d.seller || null);
+  updateHeaderAuth();
+  closeLoginModal();
+  showToast('Welcome, ' + d.user.name + '!');
+}
+
+function openDashboardPage() { window.location = '/'; }
+
+// ── Enquiry ───────────────────────────────────────────────────────────────
+function openEnquiryModal(sellerId, sellerName, productId, productName, price, listingId) {
+  enquiryCtx = { sellerId, sellerName, productId, productName, price, listingId };
+  document.getElementById('enquiry-product-info').innerHTML =
+    `<strong>${escHtml(productName)}</strong> — ${fmtPrice(price)}<br><span style="color:var(--muted)">Seller: ${escHtml(sellerName)}</span>`;
+  document.getElementById('enquiry-modal').classList.add('open');
+}
+function closeEnquiryModal() {
+  document.getElementById('enquiry-modal').classList.remove('open');
+}
+async function doEnquiry() {
+  const name = document.getElementById('enq-name').value.trim();
+  const phone = document.getElementById('enq-phone').value.trim();
+  const msg = document.getElementById('enq-msg').value.trim();
+  if (!phone) { showToast('Phone number is required.', 'error'); return; }
+  const d = await API.enquiry({
+    seller_id: enquiryCtx.sellerId, product_id: enquiryCtx.productId,
+    listing_id: enquiryCtx.listingId, customer_name: name || null,
+    customer_phone: phone, customer_message: msg || null
+  });
+  if (d.error) { showToast(d.error, 'error'); return; }
+  closeEnquiryModal();
+  showToast('Enquiry sent! The seller will contact you shortly.');
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
